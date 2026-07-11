@@ -1,1 +1,3 @@
-AttributeError: module 'eventlet.green.thread' has no attribute 'start_joinable_thread
+Flask==3.0.0
+Flask-SocketIO==5.3.6
+eventlet==0.33.3
