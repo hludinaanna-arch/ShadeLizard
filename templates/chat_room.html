@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Комната: {{ room_name }} - MySocial</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: #1f1e34;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: #2f3450;
+            color: #DFD9D8;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 { font-size: 1.5em; color: #ffffff; }
+        .room-info { font-size: 0.9em; opacity: 0.9; color: #DFD9D8; }
+        
+        .back-btn {
+            color: #DFD9D8;
+            text-decoration: none;
+            padding: 8px 15px;
+            background: #515a8a;
+            border-radius: 5px;
+        }
+        
+        .share-link {
+            padding: 10px;
+            background: #505081;
+            text-align: center;
+            font-size: 0.9em;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.3s;
+            color: #DFD9D8;
+        }
+        
+        .share-link code {
+            background: #f4f3f0;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-left: 10px;
+            color: #515a8a;
+            font-weight: bold;
+        }
+        
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            width: 100%;
+            margin: 20px auto;
+            background: #2f3450;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.835);
+            overflow: hidden;
+        }
+        
+        .messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .message {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            word-wrap: break-word;
+            color: #DFD9D8;
+        }
+        
+        .message.incoming {
+            background: #505081;
+            align-self: flex-start;
+            color: #DFD9D8;
+        }
+        
+        .message.outgoing {
+            background: #4E60AE;
+            color: #DFD9D8;
+            align-self: flex-end;
+        }
+        
+        .message.system {
+            background:#3d4368d9 ;
+            color: #DFD9D8;
+            align-self: center;
+            font-style: italic;
+            font-size: 0.9em;
+        }
+        
+        .message .username {
+            font-size: 0.8em;
+            opacity: 0.7;
+            margin-bottom: 3px;
+            color: #DFD9D8;
+        }
+        
+        .input-area {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #505081;
+            gap: 10px;
+        }
+        
+        .input-area input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #DFD9D8;
+            border-radius: 20px;
+            outline: none;
+        }
+        
+        .input-area button {
+            padding: 10px 20px;
+            background: #505081;
+            color: #DFD9D8;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        
+        .input-area button:hover { background: #3d4368d9; }
+        
+        .username-input {
+            padding: 10px;
+            background: #505081;
+            text-align: left;
+            color: #DFD9D8;
+        }
+        
+        .username-input input {
+            padding: 8px;
+            border: 1px solid #DFD9D8;
+            border-radius: 5px;
+            margin-left: 10px;
+        }
+        
+        #copyStatus {
+            margin-left: 10px;
+            color: #2f3450;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1 id="roomTitle">Комната: {{ room_name }}</h1>
+            <div class="room-info">Приватный чат</div>
+        </div>
+        <a href="/" class="back-btn">← На главную</a>
+    </div>
+    
+    <div class="share-link" onclick="copyLink()" title="Нажмите, чтобы скопировать">
+         Поделитесь ссылкой с другом: <code id="roomLink">http://127.0.0.1:5000/chat/{{ room_name }}</code>
+        <span id="copyStatus"> Скопировано</span>
+    </div>
+    
+    <div class="chat-container">
+        <div class="username-input">
+            <label>Ваш никнейм:</label>
+            <input type="text" id="username" placeholder="Введите ваш никнейм">
+        </div>
+        
+        <div class="messages" id="messages"></div>
+        
+        <div class="input-area">
+            <input type="text" id="messageInput" placeholder="Напишите сообщение...">
+            <button onclick="sendMessage()">Отправить</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+       const socket = io();
+const messagesDiv = document.getElementById('messages');
+const messageInput = document.getElementById('messageInput');
+const usernameInput = document.getElementById('username');
+const roomName = '{{ room_name }}';
+
+const urlParams = new URLSearchParams(window.location.search);
+const roomTitle = urlParams.get('name');
+if (roomTitle) {
+    document.getElementById('roomTitle').textContent = roomTitle;
+    document.title = roomTitle + ' - MySocial';
+}
+
+function saveRoomToHistory(name, title) {
+    let rooms = [];
+    try {
+        rooms = JSON.parse(localStorage.getItem('my_rooms') || '[]');
+    } catch(e) {}
+    
+    // Находим существующую комнату или создаём новую
+    let room = rooms.find(r => r.name === name);
+    
+    if (room) {
+        // Обновляем название, если изменилось
+        room.title = title;
+        
+        // Добавляем никнейм в список участников (если его там ещё нет)
+        if (username && !room.participants.includes(username)) {
+            room.participants.push(username);
+        }
+    } else {
+        // Создаём новую запись
+        room = {
+            name: name,
+            title: title,
+            participants: username ? [username] : [],
+            date: new Date().toLocaleString('ru-RU')
+        };
+        rooms.unshift(room);
+    }
+    
+    // Оставляем только последние 20 комнат
+    rooms = rooms.slice(0, 20);
+    localStorage.setItem('my_rooms', JSON.stringify(rooms));
+}
+
+let username = '';
+
+// ✅ При загрузке страницы — умный фокус
+window.addEventListener('DOMContentLoaded', function() {
+    const savedUsername = localStorage.getItem('chat_username_' + roomName);
+    if (savedUsername) {
+        username = savedUsername;
+        usernameInput.value = savedUsername;
+        socket.emit('join', { username: username, room: roomName, is_reconnect: true });
+        messageInput.focus(); // ← сразу пишем сообщение
+    } else {
+        usernameInput.focus(); // ← сначала вводим ник
+    }
+});
+
+usernameInput.addEventListener('change', function() {
+    username = this.value;
+    if (username) {
+        localStorage.setItem('chat_username_' + roomName, username);
+        socket.emit('join', { username: username, room: roomName, is_reconnect: false });
+        messageInput.focus(); // ← после ввода ника сразу пишем сообщение
+    }
+});
+
+socket.on('message', function(data) {
+    const messageDiv = document.createElement('div');
+    
+    if (data.username === 'Система') {
+        messageDiv.className = 'message system';
+        messageDiv.innerHTML = `<div>${data.message}</div>`;
+    } else {
+        messageDiv.className = 'message ' + (data.username === username ? 'outgoing' : 'incoming');
+        messageDiv.innerHTML = `
+            <div class="username">${data.username}</div>
+            <div>${data.message}</div>
+        `;
+    }
+    
+    messagesDiv.appendChild(messageDiv);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+});
+
+function sendMessage() {
+    const message = messageInput.value;
+    if (message && username) {
+        socket.emit('message', { username: username, message: message, room: roomName });
+        messageInput.value = '';
+        messageInput.focus(); // ← после отправки фокус остаётся на поле
+    }
+}
+
+messageInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        sendMessage();
+    }
+});
+
+function copyLink() {
+    const link = document.getElementById('roomLink').innerText;
+    navigator.clipboard.writeText(link).then(function() {
+        const status = document.getElementById('copyStatus');
+        status.style.opacity = '1';
+        setTimeout(function() {
+            status.style.opacity = '0';
+        }, 2000);
+    }).catch(function() {
+        const textArea = document.createElement('textarea');
+        textArea.value = link;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        const status = document.getElementById('copyStatus');
+        status.style.opacity = '1';
+        setTimeout(function() {
+            status.style.opacity = '0';
+        }, 2000);
+    });
+}
+
+window.addEventListener('beforeunload', function() {
+    if (username) {
+        socket.emit('leave', { username: username, room: roomName });
+    }
+});
+    </script>
+</body>
+</html>

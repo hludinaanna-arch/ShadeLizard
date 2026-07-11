@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Вход - MySocial</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: #2f3450;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: #262541;
+            border-radius: 20px;
+            padding: 50px;
+            box-shadow: 0 1px 7px #dfd9d8b0;
+            text-align: center;
+            max-width: 450px;
+            width: 100%;
+        }
+        
+        .lock-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #cccccc;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        
+        p {
+            color: #d0d0d0;
+            margin-bottom: 30px;
+        }
+        
+        .password-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #dfd9d8;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+            text-align: center;
+            background: #1f1e34;
+            color: white;
+        }
+        
+        .password-input:focus {
+            border-color: #ff260000;
+        }
+        
+        .password-input.error {
+            border-color: #750d1c;
+            animation: shake 0.5s;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: #1f1e34;
+            color: white;
+            border: 2px solid #dfd9d800;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 7px rgba(255, 255, 255, 0.2);
+            background: #262541;
+        }
+        
+        .error-message {
+            color: #EE2835;
+            margin-top: 15px;
+            font-size: 0.9em;
+            display: none;
+        }
+        
+        .hint {
+            margin-top: 20px;
+            padding: 15px;
+            background: #ffffff;
+            border-radius: 10px;
+            color: #1f1e34;
+            font-size: 0.9em;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="lock-icon"></div>
+        <h1>Добро пожаловать!</h1>
+        <p>Введите пароль для доступа к MySocial</p>
+        
+        <form id="loginForm" onsubmit="return false;">
+            <input type="password" id="passwordInput" class="password-input" placeholder="Пароль" autofocus>
+            
+            <button type="button" class="submit-btn" onclick="checkPassword()">Войти</button>
+        </form>
+        
+        <div class="error-message" id="errorMessage"> Неверный пароль! Попробуйте снова.</div>
+        
+        <div class="hint" id="hintBox" style="display: none;">
+             <strong>Подсказка:</strong> Пароль выдаёт администратор сайта
+        </div>
+    </div>
+
+    <script>
+        const CORRECT_PASSWORD = "akiennn28";
+        
+        function checkPassword() {
+            const input = document.getElementById('passwordInput');
+            const errorMessage = document.getElementById('errorMessage');
+            const hintBox = document.getElementById('hintBox');
+            const password = input.value;
+            
+            console.log('=== ПРОВЕРКА ПАРОЛЯ ===');
+            console.log('Введённый пароль:', password);
+            console.log('Правильный пароль:', CORRECT_PASSWORD);
+            console.log('Совпадают?', password === CORRECT_PASSWORD);
+            
+            if (password === CORRECT_PASSWORD) {
+                console.log(' Пароль верный! Сохраняю и перенаправляю...');
+                localStorage.setItem('mysocial_logged_in', 'true');
+                console.log('Сохранено в localStorage:', localStorage.getItem('mysocial_logged_in'));
+                window.location.href = '/';
+            } else {
+                console.log(' Пароль неверный!');
+                input.classList.add('error');
+                errorMessage.style.display = 'block';
+                hintBox.style.display = 'block';
+                
+                setTimeout(() => {
+                    input.classList.remove('error');
+                }, 500);
+            }
+        }
+        
+        // ✅ ИСПРАВЛЕННЫЙ ОБРАБОТЧИК ENTER
+        document.getElementById('passwordInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                e.preventDefault();
+                checkPassword();
+            }
+        });
+        
+        // Обработка отправки формы
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            checkPassword();
+        });
+    </script>
+</body>
+</html>

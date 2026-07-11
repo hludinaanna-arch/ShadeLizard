@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>International social network</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #2f3450;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: #262541;
+            border-radius: 20px;
+            padding: 50px;
+            box-shadow: 0 1px 7px #dfd9d8b0;
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #cccccc;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            color: #d0d0d0;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 20px 70px;
+            font-size: 20px;
+            border: none;
+            border-radius: 100px;
+            cursor: pointer;
+            text-decoration: none;
+            color: #DFD9D8;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.1px;
+            font-weight: bold;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .btn-chat {
+            background: #1f1e34;
+        }
+        
+        .btn-chat:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px #ffffff(215, 95, 114, 0.4);
+        }
+        
+        .btn-call {
+            background: #1f1e34;
+        }
+        
+        .btn-call:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px #ffffff(102, 126, 234, 0.4);
+        }
+        
+        .btn-video {
+            background: #1f1e34;
+        }
+        
+        .btn-video:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px #ffffff(240, 147, 251, 0.4);
+        }
+        
+        /* ✅ Кнопка выхода */
+        .btn-logout {
+            background: #1f1e34;
+        }
+        
+        .btn-logout:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px #ffffff(240, 147, 251, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>INTERNATIONAL</h1>
+        <p class="subtitle">Privacy first</p>
+        
+        <div class="buttons">
+            <a href="/chat" class="btn btn-chat">
+                <span> Начать текстовый чат</span>
+            </a>
+            <a href="/audio_call" class="btn btn-call">
+                <span> Начать аудиозвонок</span>
+            </a>
+            <a href="/call" class="btn btn-video">
+                <span> Начать видеозвонок</span>
+            </a>
+            <!-- ✅ Кнопка выхода -->
+            <button onclick="logout()" class="btn btn-logout">
+                <span> Выйти из аккаунта</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Функция выхода
+        function logout() {
+            localStorage.removeItem('mysocial_logged_in');
+            window.location.href = '/login';
+        }
+        
+        console.log('=== ПРОВЕРКА АВТОРИЗАЦИИ ===');
+        const isLoggedIn = localStorage.getItem('mysocial_logged_in');
+        console.log('Значение в localStorage:', isLoggedIn);
+        
+        if (!isLoggedIn || isLoggedIn !== 'true') {
+            console.log('❌ Не авторизован! Перенаправляю на /login');
+            window.location.href = '/login';
+        } else {
+            console.log('✅ Авторизован! Остаёмся на главной');
+        }
+    </script>
+</body>
+</html>

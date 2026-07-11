@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Видеозвонок - MySocial</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: #262541;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: #2f3450;
+            color: #DFD9D8;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 1.5em;
+            color: #DFD9D8;
+        }
+        
+        .back-btn {
+            color: #DFD9D8;
+            text-decoration: none;
+            padding: 8px 15px;
+            background: #2f3450;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        
+        .back-btn:hover {
+            background:#262541 ;
+        }
+        
+        .call-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+        
+        .jitsi-frame {
+            flex: 1;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.835);
+        }
+        
+        .jitsi-frame iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .video-badge {
+            position: fixed;
+            top: 80px;
+            right: 30px;
+            background: #785aa700;
+            color: #DFD9D8;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1> Видеозвонок</h1>
+        <a href="/" class="back-btn">← На главную</a>
+    </div>
+    
+    <div class="video-badge"> Видео включено</div>
+    
+    <div class="call-container">
+        <div class="jitsi-frame">
+            <iframe 
+                src="https://meet.jit.si/MySocialVideoRoom" 
+                allow="camera; microphone; fullscreen; display-capture"
+                allowfullscreen
+            ></iframe>
+        </div>
+    </div>
+</body>
+</html>

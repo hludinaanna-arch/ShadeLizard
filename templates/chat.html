@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Мои комнаты - MySocial</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: #2f3450;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: #262541;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.835);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            color: #DFD9D8;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #DFD9D8;
+        }
+        
+        .rooms-list {
+            background: #262541;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.835);
+            color: #DFD9D8;
+        }
+        
+        .rooms-list h2 {
+            color: #DFD9D8;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        .room-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: #2f3450;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: #DFD9D8;
+        }
+        
+        .room-item:hover {
+            background: #2f3450;
+            transform: translateX(5px);
+        }
+        
+        .room-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .room-name {
+            color: #DFD9D8;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        .room-participants {
+            color: #DFD9D8;
+            font-size: 0.9em;
+        }
+        
+        .delete-btn {
+            background: #DFD9D8;
+            color: #262541;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        
+        .delete-btn:hover {
+            background: #1f1e34;
+            color: #DFD9D8;
+        }
+        
+        .empty-message {
+            text-align: center;
+            color: #DFD9D8;
+            padding: 30px;
+            font-style: italic;
+        }
+        
+        .create-btn {
+            display: block;
+            width: 100%;
+            padding: 18px;
+            background: #1f1e34;
+            color: #DFD9D8;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: 0.3s;
+        }
+        
+        .create-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.835);
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #dfd9d8b8;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #2f3450;
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        .modal {
+            background: #262541;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.835);
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .modal h2 {
+            color: #dfd9d8b8;
+            margin-bottom: 10px;
+            font-size: 1.8em;
+            text-align: center;
+        }
+        
+        .modal p {
+            color: #dfd9d8b8;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .modal input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ffdfdf;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+        }
+        
+        .modal input:focus {
+            border-color: #dfd9d8b8;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .modal-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        .modal-btn.cancel {
+            background: #1f1e34;
+            color: #DFD9D8;
+        }
+        .modal-btn.cancel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.835);
+        }
+        .modal-btn.create {
+            background: #1f1e34;
+            color: white;
+        }
+        
+        .modal-btn.create:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.835);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1> Мои чаты</h1>
+            <p>Выберите чат или создайте новый</p>
+        </div>
+        
+        <div class="rooms-list">
+            <h2>История чатов</h2>
+            <div id="roomsContainer"></div>
+            <button class="create-btn" onclick="openModal()"> Создать новый чат</button>
+        </div>
+        
+        <div style="text-align: center;">
+            <a href="/" class="back-link">← На главную</a>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h2> Новый чат</h2>
+            <p>Придумайте название для вашего чата:</p>
+            <input type="text" id="roomNameInput" placeholder="Например: Новый чат класса" maxlength="50">
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" onclick="closeModal()">Отмена</button>
+                <button class="modal-btn create" onclick="createRoom()">Создать</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getRooms() {
+            const rooms = localStorage.getItem('my_rooms');
+            return rooms ? JSON.parse(rooms) : [];
+        }
+        
+        function saveRoom(roomName, roomTitle) {
+            let rooms = getRooms();
+            let room = rooms.find(r => r.name === roomName);
+            
+            if (room) {
+                room.title = roomTitle || 'Чат ' + roomName;
+                rooms = rooms.filter(r => r.name !== roomName);
+                rooms.unshift(room);
+            } else {
+                rooms.unshift({
+                    name: roomName,
+                    title: roomTitle || 'Чат ' + roomName,
+                    participants: [],
+                    date: new Date().toLocaleString('ru-RU')
+                });
+            }
+            
+            rooms = rooms.slice(0, 20);
+            localStorage.setItem('my_rooms', JSON.stringify(rooms));
+        }
+        
+        function deleteRoom(roomName, event) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            let rooms = getRooms();
+            rooms = rooms.filter(r => r.name !== roomName);
+            localStorage.setItem('my_rooms', JSON.stringify(rooms));
+            renderRooms();
+        }
+        
+        function openModal() {
+            document.getElementById('modalOverlay').classList.add('active');
+            document.getElementById('roomNameInput').value = '';
+            setTimeout(() => {
+                document.getElementById('roomNameInput').focus();
+            }, 100);
+        }
+        
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+        }
+        
+        function createRoom() {
+            const roomTitle = document.getElementById('roomNameInput').value.trim();
+            
+            if (!roomTitle) {
+                document.getElementById('roomNameInput').style.borderColor = 'red';
+                setTimeout(() => {
+                    document.getElementById('roomNameInput').style.borderColor = '#ffdfdf';
+                }, 1000);
+                return;
+            }
+            
+            fetch('/create-room', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: roomTitle })
+            })
+            .then(response => response.json())
+            .then(data => {
+                saveRoom(data.room_id, data.title);
+                window.location.href = '/chat/' + data.room_id + '?name=' + encodeURIComponent(data.title);
+            });
+        }
+        
+        document.getElementById('modalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+        
+        document.getElementById('roomNameInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                createRoom();
+            }
+        });
+        
+        function renderRooms() {
+            const container = document.getElementById('roomsContainer');
+            const rooms = getRooms();
+            
+            if (rooms.length === 0) {
+                container.innerHTML = '<div class="empty-message">Нет активных чатов</div>';
+                return;
+            }
+            
+            container.innerHTML = rooms.map(room => {
+                const title = room.title || 'Чат ' + room.name;
+                const safeTitle = title.replace(/'/g, "\\'");
+                
+                // Формируем список участников
+                let participantsText = '';
+                if (room.participants && room.participants.length > 0) {
+                    participantsText =  room.participants.join(', ');
+                } else {
+                    participantsText = ' Нет активных участников';
+                }
+                
+                return `
+                    <a href="/chat/${room.name}?name=${encodeURIComponent(title)}" class="room-item" onclick="saveRoom('${room.name}', '${safeTitle}')">
+                        <div class="room-info">
+                            <div class="room-name"> ${title}</div>
+                            <div class="room-participants">${participantsText}</div>
+                        </div>
+                        <button class="delete-btn" onclick="deleteRoom('${room.name}', event)">Удалить</button>
+                    </a>
+                `;
+            }).join('');
+        }
+        
+        window.addEventListener('pageshow', function(event) {
+            renderRooms();
+        });
+        
+        window.addEventListener('DOMContentLoaded', function() {
+            renderRooms();
+        });
+        
+        window.addEventListener('focus', function() {
+            renderRooms();
+        });
+        
+        renderRooms();
+    </script>
+</body>
+</html>
