@@ -45,7 +45,6 @@
             align-items: center;
             gap: 10px;
             flex-wrap: wrap;
-            position: relative;
         }
         
         .share-link code {
@@ -64,19 +63,13 @@
             transform: scale(1.02);
         }
         
+        /* ✅ Простая зелёная надпись без фона и рамки */
         #copyStatus {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
+            color: #4CAF50;
             font-weight: bold;
+            font-size: 0.9em;
             opacity: 0;
             transition: opacity 0.3s;
-            pointer-events: none;
         }
         
         .connection-status {
@@ -199,9 +192,9 @@
     </div>
     
     <div class="share-link">
-        <span> Наведите на ссылку, чтобы скопировать:</span>
+        <span>🔗 Наведите на ссылку, чтобы скопировать:</span>
         <code id="roomLink">Загрузка...</code>
-        <div id="copyStatus"> Ссылка скопирована!</div>
+        <span id="copyStatus">Скопировано!</span>
     </div>
     
     <div class="chat-container">
@@ -220,10 +213,8 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script>
-        // ✅ ВАЖНО: Получаем название комнаты из Flask
         const roomName = '{{ room_name }}';
         
-        // ✅ Получаем элементы страницы
         const socket = io({
             reconnection: true,
             reconnectionDelay: 1000,
@@ -235,18 +226,22 @@
         const messageInput = document.getElementById('messageInput');
         const usernameInput = document.getElementById('username');
         
-        // ✅ Генерируем правильную ссылку на комнату
         const roomLink = window.location.origin + '/chat/' + roomName;
         const roomLinkElement = document.getElementById('roomLink');
         roomLinkElement.textContent = roomLink;
         
-        <div class="share-link" onclick="copyLink()" title="Нажмите, чтобы скопировать">
-         Поделитесь ссылкой с другом: <code id="roomLink">'/chat/'+roomName<
-    </code>
-        <span id="copyStatus"> Скопировано</span>
-    </div>
+        roomLinkElement.addEventListener('mouseenter', function() {
+            navigator.clipboard.writeText(roomLink).then(function() {
+                const status = document.getElementById('copyStatus');
+                status.style.opacity = '1';
+                setTimeout(function() {
+                    status.style.opacity = '0';
+                }, 2000);
+            }).catch(function(err) {
+                console.error('Ошибка копирования:', err);
+            });
+        });
         
-        // ✅ Функция сохранения комнаты в историю
         function saveRoomToHistory(name, title) {
             let rooms = [];
             try {
@@ -276,7 +271,6 @@
         
         let username = '';
         
-        // ✅ При загрузке страницы — умный фокус
         window.addEventListener('DOMContentLoaded', function() {
             const savedUsername = localStorage.getItem('chat_username_' + roomName);
             if (savedUsername) {
@@ -290,7 +284,6 @@
             }
         });
         
-        // ✅ Когда пользователь вводит никнейм
         usernameInput.addEventListener('change', function() {
             username = this.value;
             if (username) {
@@ -310,7 +303,6 @@
             }
         });
         
-        // ✅ Получение сообщений
         socket.on('message', function(data) {
             const messageDiv = document.createElement('div');
             
@@ -329,7 +321,6 @@
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         });
         
-        // ✅ Отправка сообщения
         function sendMessage() {
             const message = messageInput.value;
             if (message && username) {
@@ -339,14 +330,12 @@
             }
         }
         
-        // ✅ Отправка по Enter
         messageInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 sendMessage();
             }
         });
         
-        // ✅ Индикатор подключения
         socket.on('connect', function() {
             document.getElementById('connectionStatus').style.display = 'none';
         });
@@ -360,7 +349,6 @@
             document.getElementById('connectionStatus').style.display = 'block';
         });
         
-        // ✅ Уведомление о выходе
         window.addEventListener('beforeunload', function() {
             if (username) {
                 socket.emit('leave', { username: username, room: roomName });
