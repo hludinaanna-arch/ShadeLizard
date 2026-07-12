@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Комната: {{ room_name }} - MySocial</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -12,6 +13,7 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
         
         .header {
@@ -21,6 +23,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-shrink: 0;
         }
         
         .header h1 { font-size: 1.5em; color: #ffffff; }
@@ -32,10 +35,11 @@
             padding: 8px 15px;
             background: #515a8a;
             border-radius: 5px;
+            white-space: nowrap;
         }
         
         .share-link {
-            padding: 15px;
+            padding: 12px;
             background: #505081;
             text-align: center;
             font-size: 0.9em;
@@ -43,27 +47,23 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
+            flex-shrink: 0;
         }
         
         .share-link code {
             background: #f4f3f0;
-            padding: 8px 15px;
+            padding: 6px 12px;
             border-radius: 5px;
             color: #515a8a;
             font-weight: bold;
             word-break: break-all;
             cursor: pointer;
             transition: all 0.3s;
+            max-width: 100%;
         }
         
-        .share-link code:hover {
-            background: #e0e0e0;
-            transform: scale(1.02);
-        }
-        
-        /* ✅ Простая зелёная надпись без фона и рамки */
         #copyStatus {
             color: #4CAF50;
             font-weight: bold;
@@ -78,6 +78,7 @@
             color: white;
             text-align: center;
             display: none;
+            flex-shrink: 0;
         }
         
         .chat-container {
@@ -86,24 +87,26 @@
             flex-direction: column;
             max-width: 800px;
             width: 100%;
-            margin: 20px auto;
+            margin: 10px auto;
             background: #2f3450;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.835);
+            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.2);
             overflow: hidden;
+            min-height: 0;
         }
         
         .messages {
             flex: 1;
-            padding: 20px;
+            padding: 15px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
             gap: 10px;
+            min-height: 0;
         }
         
         .message {
-            max-width: 70%;
+            max-width: 75%;
             padding: 10px 15px;
             border-radius: 15px;
             word-wrap: break-word;
@@ -125,6 +128,7 @@
             align-self: center;
             font-style: italic;
             font-size: 0.9em;
+            max-width: 90%;
         }
         
         .message .username {
@@ -133,11 +137,20 @@
             margin-bottom: 3px;
         }
         
+        /* Стили для плеера голосовых */
+        .voice-message audio {
+            max-width: 200px;
+            height: 30px;
+            margin-top: 5px;
+        }
+        
         .input-area {
             display: flex;
-            padding: 15px;
+            padding: 12px;
             border-top: 1px solid #505081;
             gap: 10px;
+            flex-shrink: 0;
+            align-items: center;
         }
         
         .input-area input {
@@ -148,6 +161,7 @@
             outline: none;
             background: #1f1e34;
             color: #DFD9D8;
+            min-width: 0;
         }
         
         .input-area button {
@@ -157,118 +171,79 @@
             border: none;
             border-radius: 20px;
             cursor: pointer;
+            white-space: nowrap;
+            font-size: 1.2em;
         }
         
-        .input-area button:hover { background: #3d4368d9; }
+        /* Кнопка микрофона */
+        #micBtn {
+            background: #505081;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        
+        /* Анимация записи */
+        #micBtn.recording {
+            background: #ff4444;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); }
+        }
         
         .username-input {
             padding: 10px 15px;
             background: #505081;
-            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
             color: #DFD9D8;
+            flex-shrink: 0;
         }
         
         .username-input input {
             padding: 8px;
             border: 1px solid #DFD9D8;
             border-radius: 5px;
-            margin-left: 10px;
             background: #1f1e34;
             color: #DFD9D8;
+            flex: 1;
+            min-width: 0;
         }
-        /* ✅ Адаптивность для мобильных устройств */
-@media (max-width: 768px) {
-    .container {
-        padding: 20px !important;
-        margin: 10px !important;
-    }
-    
-    h1 {
-        font-size: 1.5em !important;
-    }
-    
-    .btn {
-        padding: 15px 20px !important;
-        font-size: 16px !important;
-    }
-    
-    .share-link {
-        flex-direction: column !important;
-        padding: 10px !important;
-        font-size: 0.8em !important;
-    }
-    
-    .share-link code {
-        font-size: 0.75em !important;
-        padding: 6px 10px !important;
-    }
-    
-    .header {
-        flex-direction: column !important;
-        gap: 10px !important;
-        text-align: center !important;
-    }
-    
-    .header h1 {
-        font-size: 1.2em !important;
-    }
-    
-    .messages {
-        padding: 10px !important;
-    }
-    
-    .message {
-        max-width: 85% !important;
-        font-size: 0.9em !important;
-    }
-    
-    .input-area {
-        flex-direction: column !important;
-    }
-    
-    .input-area button {
-        width: 100% !important;
-    }
-    
-    .username-input {
-        flex-direction: column !important;
-        gap: 5px !important;
-    }
-    
-    .username-input input {
-        margin-left: 0 !important;
-        width: 100% !important;
-    }
-}
-
-/* ✅ Для очень маленьких экранов (телефоны) */
-@media (max-width: 480px) {
-    body {
-        padding: 5px !important;
-    }
-    
-    .container {
-        padding: 15px !important;
-    }
-    
-    h1 {
-        font-size: 1.3em !important;
-    }
-    
-    .subtitle {
-        font-size: 0.9em !important;
-    }
-    
-    .btn {
-        padding: 12px 15px !important;
-        font-size: 14px !important;
-    }
-}
+        
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; text-align: center; padding: 10px; }
+            .header h1 { font-size: 1.2em; }
+            .share-link { flex-direction: column; padding: 10px; font-size: 0.8em; }
+            .share-link code { font-size: 0.75em; width: 100%; }
+            .chat-container { margin: 5px; border-radius: 5px; }
+            .messages { padding: 10px; }
+            .message { max-width: 85%; font-size: 0.9em; }
+            .username-input { flex-direction: column; align-items: flex-start; }
+            .username-input input { width: 100%; }
+        }
+        
+        @media (max-width: 480px) {
+            .header h1 { font-size: 1em; }
+            .back-btn { padding: 6px 10px; font-size: 0.85em; }
+            .input-area { padding: 8px; }
+            .input-area input { padding: 8px; font-size: 14px; }
+            #sendBtn { padding: 8px 15px; font-size: 14px; }
+        }
     </style>
 </head>
 <body>
     <div id="connectionStatus" class="connection-status">
-        ⚠️ Подключение к серверу... Подождите несколько секунд и обновите страницу.
+        ⚠️ Подключение к серверу... Подождите несколько секунд.
     </div>
     
     <div class="header">
@@ -280,22 +255,24 @@
     </div>
     
     <div class="share-link">
-        <span> Наведите на ссылку, чтобы скопировать:</span>
+        <span>🔗 Ссылка:</span>
         <code id="roomLink">Загрузка...</code>
         <span id="copyStatus">Скопировано!</span>
     </div>
     
     <div class="chat-container">
         <div class="username-input">
-            <label>Ваш никнейм:</label>
+            <label>Никнейм:</label>
             <input type="text" id="username" placeholder="Введите ваш никнейм">
         </div>
         
         <div class="messages" id="messages"></div>
         
         <div class="input-area">
+            <!-- Кнопка микрофона -->
+            <button id="micBtn" title="Голосовое сообщение"></button>
             <input type="text" id="messageInput" placeholder="Напишите сообщение...">
-            <button onclick="sendMessage()">Отправить</button>
+            <button id="sendBtn" onclick="sendMessage()">➤</button>
         </div>
     </div>
 
@@ -313,46 +290,93 @@
         const messagesDiv = document.getElementById('messages');
         const messageInput = document.getElementById('messageInput');
         const usernameInput = document.getElementById('username');
+        const micBtn = document.getElementById('micBtn');
         
+        // Ссылка для копирования
         const roomLink = window.location.origin + '/chat/' + roomName;
-        const roomLinkElement = document.getElementById('roomLink');
-        roomLinkElement.textContent = roomLink;
+        document.getElementById('roomLink').textContent = roomLink;
         
-        roomLinkElement.addEventListener('mouseenter', function() {
+        document.getElementById('roomLink').addEventListener('mouseenter', function() {
+            copyToClipboard();
+        });
+        document.getElementById('roomLink').addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            copyToClipboard();
+        });
+        
+        function copyToClipboard() {
             navigator.clipboard.writeText(roomLink).then(function() {
                 const status = document.getElementById('copyStatus');
                 status.style.opacity = '1';
-                setTimeout(function() {
-                    status.style.opacity = '0';
-                }, 2000);
-            }).catch(function(err) {
-                console.error('Ошибка копирования:', err);
+                setTimeout(function() { status.style.opacity = '0'; }, 2000);
             });
-        });
+        }
         
-        function saveRoomToHistory(name, title) {
-            let rooms = [];
-            try {
-                rooms = JSON.parse(localStorage.getItem('my_rooms') || '[]');
-            } catch(e) {}
-            
-            let room = rooms.find(r => r.name === name);
-            
-            if (room) {
-                room.title = title;
-                if (username && !room.participants.includes(username)) {
-                    room.participants.push(username);
+        // --- ЛОГИКА ГОЛОСОВЫХ СООБЩЕНИЙ ---
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+
+        micBtn.addEventListener('click', async () => {
+            if (!isRecording) {
+                // Начинаем запись
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    
+                    mediaRecorder.ondataavailable = event => {
+                        audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const reader = new FileReader();
+                        reader.readAsDataURL(audioBlob);
+                        reader.onloadend = () => {
+                            const base64Audio = reader.result;
+                            // Отправляем голосовое
+                            socket.emit('message', { 
+                                username: username, 
+                                message: base64Audio, 
+                                room: roomName,
+                                type: 'voice' // Метка, что это голос
+                            });
+                        };
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    micBtn.classList.add('recording');
+                    messageInput.placeholder = "Идет запись... Нажмите 🎤 чтобы остановить";
+                    messageInput.disabled = true;
+                    
+                } catch (err) {
+                    alert('Нужен доступ к микрофону!');
+                    console.error(err);
                 }
             } else {
-                room = {
-                    name: name,
-                    title: title,
-                    participants: username ? [username] : [],
-                    date: new Date().toLocaleString('ru-RU')
-                };
+                // Останавливаем запись
+                mediaRecorder.stop();
+                isRecording = false;
+                micBtn.classList.remove('recording');
+                messageInput.placeholder = "Напишите сообщение...";
+                messageInput.disabled = false;
+            }
+        });
+        // ----------------------------------
+
+        function saveRoomToHistory(name, title) {
+            let rooms = [];
+            try { rooms = JSON.parse(localStorage.getItem('my_rooms') || '[]'); } catch(e) {}
+            let room = rooms.find(r => r.name === name);
+            if (room) {
+                room.title = title;
+                if (username && !room.participants.includes(username)) room.participants.push(username);
+            } else {
+                room = { name: name, title: title, participants: username ? [username] : [], date: new Date().toLocaleString('ru-RU') };
                 rooms.unshift(room);
             }
-            
             rooms = rooms.slice(0, 20);
             localStorage.setItem('my_rooms', JSON.stringify(rooms));
         }
@@ -376,7 +400,6 @@
             username = this.value;
             if (username) {
                 localStorage.setItem('chat_username_' + roomName, username);
-                
                 if (socket.connected) {
                     socket.emit('join', { username: username, room: roomName, is_reconnect: false });
                     saveRoomToHistory(roomName, 'Комната ' + roomName);
@@ -386,18 +409,26 @@
                         saveRoomToHistory(roomName, 'Комната ' + roomName);
                     });
                 }
-                
                 messageInput.focus();
             }
         });
         
+        // ОБРАБОТКА СООБЩЕНИЙ (Теперь проверяем тип)
         socket.on('message', function(data) {
             const messageDiv = document.createElement('div');
             
             if (data.username === 'Система') {
                 messageDiv.className = 'message system';
                 messageDiv.innerHTML = `<div>${data.message}</div>`;
+            } else if (data.type === 'voice') {
+                // Если это голосовое сообщение
+                messageDiv.className = 'message voice-message ' + (data.username === username ? 'outgoing' : 'incoming');
+                messageDiv.innerHTML = `
+                    <div class="username">${data.username} 🎤</div>
+                    <audio controls src="${data.message}"></audio>
+                `;
             } else {
+                // Обычный текст
                 messageDiv.className = 'message ' + (data.username === username ? 'outgoing' : 'incoming');
                 messageDiv.innerHTML = `
                     <div class="username">${data.username}</div>
@@ -419,28 +450,15 @@
         }
         
         messageInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
+            if (e.key === 'Enter') sendMessage();
         });
         
-        socket.on('connect', function() {
-            document.getElementById('connectionStatus').style.display = 'none';
-        });
-        
-        socket.on('disconnect', function() {
-            document.getElementById('connectionStatus').style.display = 'block';
-        });
-        
-        socket.on('connect_error', function(error) {
-            console.log('Ошибка подключения:', error);
-            document.getElementById('connectionStatus').style.display = 'block';
-        });
+        socket.on('connect', () => document.getElementById('connectionStatus').style.display = 'none');
+        socket.on('disconnect', () => document.getElementById('connectionStatus').style.display = 'block');
+        socket.on('connect_error', () => document.getElementById('connectionStatus').style.display = 'block');
         
         window.addEventListener('beforeunload', function() {
-            if (username) {
-                socket.emit('leave', { username: username, room: roomName });
-            }
+            if (username) socket.emit('leave', { username: username, room: roomName });
         });
     </script>
 </body>
