@@ -84,6 +84,10 @@ def handle_message(data):
     rooms_messages[room].append(data)
     emit('message', data, room=room)
 
+@app.route('/health')
+def health():
+    return 'OK', 200
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     socketio.run(app, host='0.0.0.0', port=port, debug=False, allow_unsafe_werkzeug=True)
