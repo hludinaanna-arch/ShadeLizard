@@ -162,6 +162,9 @@
 </head>
 <body>
     <div class="header">
+        <div id="connectionStatus" style="padding: 10px; background: #ff6b6b; color: white; text-align: center; display: none;">
+    ️ Подключение к серверу... Подождите несколько секунд и обновите страницу.
+</div>
         <div>
             <h1 id="roomTitle">Комната: {{ room_name }}</h1>
             <div class="room-info">Приватный чат</div>
@@ -333,6 +336,18 @@ window.addEventListener('beforeunload', function() {
     if (username) {
         socket.emit('leave', { username: username, room: roomName });
     }
+});
+        socket.on('connect', function() {
+    document.getElementById('connectionStatus').style.display = 'none';
+});
+
+socket.on('disconnect', function() {
+    document.getElementById('connectionStatus').style.display = 'block';
+});
+
+socket.on('connect_error', function(error) {
+    console.log('Ошибка подключения:', error);
+    document.getElementById('connectionStatus').style.display = 'block';
 });
     </script>
 </body>
