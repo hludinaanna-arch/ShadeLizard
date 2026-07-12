@@ -4,7 +4,12 @@ import uuid
 import os
 
 app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+socketio = SocketIO(
+    app, 
+    cors_allowed_origins="*", 
+    async_mode='threading',
+    max_http_buffer_size=50 * 1024 * 1024  # 50 МБ
+)
 
 # Хранилище названий комнат
 room_titles = {}
