@@ -251,6 +251,24 @@ usernameInput.addEventListener('change', function() {
         localStorage.setItem('chat_username_' + roomName, username);
         socket.emit('join', { username: username, room: roomName, is_reconnect: false });
         messageInput.focus(); // ← после ввода ника сразу пишем сообщение
+        usernameInput.addEventListener('change', function() {
+    username = this.value;
+    if (username) {
+        localStorage.setItem('chat_username_' + roomName, username);
+        
+        // Проверяем, подключен ли сокет
+        if (socket.connected) {
+            socket.emit('join', { username: username, room: roomName, is_reconnect: false });
+        } else {
+            // Ждём подключения
+            socket.on('connect', function() {
+                socket.emit('join', { username: username, room: roomName, is_reconnect: false });
+            });
+        }
+        
+        messageInput.focus();
+    }
+});
     }
 });
 
