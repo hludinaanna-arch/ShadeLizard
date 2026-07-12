@@ -1,9 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room
 import uuid
+import os
 
 app = Flask(__name__)
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
 # Хранилище названий комнат
 room_titles = {}
@@ -11,13 +12,13 @@ room_titles = {}
 # Хранилище сообщений каждой комнаты
 rooms_messages = {}
 
-@app.route('/login')
-def login():
-    return render_template('login.html')
-
 @app.route('/')
 def home():
     return render_template('index.html')
+
+@app.route('/login')
+def login():
+    return render_template('login.html')
 
 @app.route('/chat', methods=['GET', 'POST'])
 def chat():
@@ -46,7 +47,6 @@ def audio_call():
 @app.route('/call')
 def call():
     return render_template('call.html')
-
 
 @socketio.on('join')
 def on_join(data):
@@ -85,6 +85,5 @@ def handle_message(data):
     emit('message', data, room=room)
 
 if __name__ == '__main__':
-    import os
     port = int(os.environ.get('PORT', 5000))
-    socketio.run(app, host='0.0.0.0', port=port, debug=False)
+    socketio.run(app, host='0.0.0.0', port=port, debug=False, allow_unsafe_werkzeug=True)
