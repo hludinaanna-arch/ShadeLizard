@@ -190,18 +190,12 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script>
-       const socket = io();
-const messagesDiv = document.getElementById('messages');
-const messageInput = document.getElementById('messageInput');
-const usernameInput = document.getElementById('username');
-const roomName = '{{ room_name }}';
-
-const urlParams = new URLSearchParams(window.location.search);
-const roomTitle = urlParams.get('name');
-if (roomTitle) {
-    document.getElementById('roomTitle').textContent = roomTitle;
-    document.title = roomTitle + ' - MySocial';
-}
+       const socket = io({
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionAttempts: 10,
+    timeout: 20000
+});
 
 function saveRoomToHistory(name, title) {
     let rooms = [];
