@@ -199,9 +199,9 @@
     </div>
     
     <div class="share-link">
-        <span>🔗 Наведите на ссылку, чтобы скопировать:</span>
+        <span> Наведите на ссылку, чтобы скопировать:</span>
         <code id="roomLink">Загрузка...</code>
-        <div id="copyStatus">✅ Ссылка скопирована!</div>
+        <div id="copyStatus"> Ссылка скопирована!</div>
     </div>
     
     <div class="chat-container">
@@ -240,18 +240,10 @@
         const roomLinkElement = document.getElementById('roomLink');
         roomLinkElement.textContent = roomLink;
         
-        // ✅ Автоматическое копирование при наведении мышки
-        roomLinkElement.addEventListener('mouseenter', function() {
-            navigator.clipboard.writeText(roomLink).then(function() {
-                const status = document.getElementById('copyStatus');
-                status.style.opacity = '1';
-                setTimeout(function() {
-                    status.style.opacity = '0';
-                }, 2000);
-            }).catch(function(err) {
-                console.error('Ошибка копирования:', err);
-            });
-        });
+        <div class="share-link" onclick="copyLink()" title="Нажмите, чтобы скопировать">
+         Поделитесь ссылкой с другом: <code id="roomLink">http://127.0.0.1:5000/chat/{{ room_name }}</code>
+        <span id="copyStatus"> Скопировано</span>
+    </div>
         
         // ✅ Функция сохранения комнаты в историю
         function saveRoomToHistory(name, title) {
