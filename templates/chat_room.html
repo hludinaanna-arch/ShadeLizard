@@ -45,6 +45,7 @@
             align-items: center;
             gap: 10px;
             flex-wrap: wrap;
+            position: relative;
         }
         
         .share-link code {
@@ -54,26 +55,28 @@
             color: #515a8a;
             font-weight: bold;
             word-break: break-all;
-        }
-        
-        .share-link button {
-            padding: 8px 15px;
-            background: #4E60AE;
-            color: white;
-            border: none;
-            border-radius: 5px;
             cursor: pointer;
+            transition: all 0.3s;
         }
         
-        .share-link button:hover {
-            background: #3d4d8a;
+        .share-link code:hover {
+            background: #e0e0e0;
+            transform: scale(1.02);
         }
         
         #copyStatus {
-            color: #4CAF50;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
             font-weight: bold;
             opacity: 0;
             transition: opacity 0.3s;
+            pointer-events: none;
         }
         
         .connection-status {
@@ -184,7 +187,7 @@
 </head>
 <body>
     <div id="connectionStatus" class="connection-status">
-         Подключение к серверу... Подождите несколько секунд и обновите страницу.
+        ⚠️ Подключение к серверу... Подождите несколько секунд и обновите страницу.
     </div>
     
     <div class="header">
@@ -196,10 +199,9 @@
     </div>
     
     <div class="share-link">
-        <span> Ссылка на комнату:</span>
+        <span>🔗 Наведите на ссылку, чтобы скопировать:</span>
         <code id="roomLink">Загрузка...</code>
-        <button onclick="copyLink()"> Копировать</button>
-        <span id="copyStatus"> Скопировано!</span>
+        <div id="copyStatus">✅ Ссылка скопирована!</div>
     </div>
     
     <div class="chat-container">
@@ -235,7 +237,21 @@
         
         // ✅ Генерируем правильную ссылку на комнату
         const roomLink = window.location.origin + '/chat/' + roomName;
-        document.getElementById('roomLink').textContent = roomLink;
+        const roomLinkElement = document.getElementById('roomLink');
+        roomLinkElement.textContent = roomLink;
+        
+        // ✅ Автоматическое копирование при наведении мышки
+        roomLinkElement.addEventListener('mouseenter', function() {
+            navigator.clipboard.writeText(roomLink).then(function() {
+                const status = document.getElementById('copyStatus');
+                status.style.opacity = '1';
+                setTimeout(function() {
+                    status.style.opacity = '0';
+                }, 2000);
+            }).catch(function(err) {
+                console.error('Ошибка копирования:', err);
+            });
+        });
         
         // ✅ Функция сохранения комнаты в историю
         function saveRoomToHistory(name, title) {
@@ -336,17 +352,6 @@
                 sendMessage();
             }
         });
-        
-        // ✅ Копирование ссылки
-        function copyLink() {
-            navigator.clipboard.writeText(roomLink).then(function() {
-                const status = document.getElementById('copyStatus');
-                status.style.opacity = '1';
-                setTimeout(function() {
-                    status.style.opacity = '0';
-                }, 2000);
-            });
-        }
         
         // ✅ Индикатор подключения
         socket.on('connect', function() {
