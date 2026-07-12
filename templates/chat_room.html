@@ -137,7 +137,6 @@
             margin-bottom: 3px;
         }
         
-        /* Стили для плеера голосовых */
         .voice-message audio {
             max-width: 200px;
             height: 30px;
@@ -175,7 +174,6 @@
             font-size: 1.2em;
         }
         
-        /* Кнопка микрофона */
         #micBtn {
             background: #505081;
             border-radius: 50%;
@@ -187,7 +185,6 @@
             padding: 0;
         }
         
-        /* Анимация записи */
         #micBtn.recording {
             background: #ff4444;
             animation: pulse 1s infinite;
@@ -219,7 +216,6 @@
             min-width: 0;
         }
         
-        /* Адаптивность */
         @media (max-width: 768px) {
             .header { flex-direction: column; gap: 10px; text-align: center; padding: 10px; }
             .header h1 { font-size: 1.2em; }
@@ -269,7 +265,6 @@
         <div class="messages" id="messages"></div>
         
         <div class="input-area">
-            <!-- Кнопка микрофона -->
             <button id="micBtn" title="Голосовое сообщение"></button>
             <input type="text" id="messageInput" placeholder="Напишите сообщение...">
             <button id="sendBtn" onclick="sendMessage()">➤</button>
@@ -292,13 +287,10 @@
         const usernameInput = document.getElementById('username');
         const micBtn = document.getElementById('micBtn');
         
-        // Ссылка для копирования
         const roomLink = window.location.origin + '/chat/' + roomName;
         document.getElementById('roomLink').textContent = roomLink;
         
-        document.getElementById('roomLink').addEventListener('mouseenter', function() {
-            copyToClipboard();
-        });
+        document.getElementById('roomLink').addEventListener('mouseenter', copyToClipboard);
         document.getElementById('roomLink').addEventListener('touchstart', function(e) {
             e.preventDefault();
             copyToClipboard();
@@ -312,66 +304,60 @@
             });
         }
         
-        // --- ЛОГИКА ГОЛОСОВЫХ СООБЩЕНИЙ ---
-       // --- ЛОГИКА ГОЛОСОВЫХ СООБЩЕНИЙ ---
-let mediaRecorder;
-let audioChunks = [];
-let isRecording = false;
-let recordingStartTime;
+        // --- ГОЛОСОВЫЕ СООБЩЕНИЯ ---
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        let recordingStartTime;
 
-micBtn.addEventListener('click', async () => {
-    if (!isRecording) {
-        // Начинаем запись
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
-            
-            mediaRecorder.ondataavailable = event => {
-                audioChunks.push(event.data);
-            };
-
-            mediaRecorder.onstop = () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                const reader = new FileReader();
-                reader.readAsDataURL(audioBlob);
-                reader.onloadend = () => {
-                    const base64Audio = reader.result;
-                    // Вычисляем длительность записи
-                    const duration = Math.round((Date.now() - recordingStartTime) / 1000);
+        micBtn.addEventListener('click', async () => {
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
                     
-                    // Отправляем голосовое с длительностью
-                    socket.emit('message', { 
-                        username: username, 
-                        message: base64Audio, 
-                        room: roomName,
-                        type: 'voice',
-                        duration: duration // Передаём длительность в секундах
-                    });
-                };
-            };
+                    mediaRecorder.ondataavailable = event => {
+                        audioChunks.push(event.data);
+                    };
 
-            mediaRecorder.start();
-            recordingStartTime = Date.now(); // Запоминаем время начала
-            isRecording = true;
-            micBtn.classList.add('recording');
-            messageInput.placeholder = "Идет запись... Нажмите 🎤 чтобы остановить";
-            messageInput.disabled = true;
-            
-        } catch (err) {
-            alert('Нужен доступ к микрофону!');
-            console.error(err);
-        }
-    } else {
-        // Останавливаем запись
-        mediaRecorder.stop();
-        isRecording = false;
-        micBtn.classList.remove('recording');
-        messageInput.placeholder = "Напишите сообщение...";
-        messageInput.disabled = false;
-    }
-});
-// ----------------------------------
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const reader = new FileReader();
+                        reader.readAsDataURL(audioBlob);
+                        reader.onloadend = () => {
+                            const base64Audio = reader.result;
+                            const duration = Math.round((Date.now() - recordingStartTime) / 1000);
+                            
+                            socket.emit('message', { 
+                                username: username, 
+                                message: base64Audio, 
+                                room: roomName,
+                                type: 'voice',
+                                duration: duration
+                            });
+                        };
+                    };
+
+                    mediaRecorder.start();
+                    recordingStartTime = Date.now();
+                    isRecording = true;
+                    micBtn.classList.add('recording');
+                    messageInput.placeholder = "Идет запись... Нажмите 🎤 чтобы остановить";
+                    messageInput.disabled = true;
+                    
+                } catch (err) {
+                    alert('Нужен доступ к микрофону!');
+                    console.error(err);
+                }
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                micBtn.classList.remove('recording');
+                messageInput.placeholder = "Напишите сообщение...";
+                messageInput.disabled = false;
+            }
+        });
         // ----------------------------------
 
         function saveRoomToHistory(name, title) {
@@ -421,43 +407,23 @@ micBtn.addEventListener('click', async () => {
             }
         });
         
-        // ОБРАБОТКА СООБЩЕНИЙ (Теперь проверяем тип)
+        // ОБРАБОТКА СООБЩЕНИЙ
         socket.on('message', function(data) {
-    const messageDiv = document.createElement('div');
-    
-    if (data.username === 'Система') {
-        messageDiv.className = 'message system';
-        messageDiv.innerHTML = `<div>${data.message}</div>`;
-    } else if (data.type === 'voice') {
-        // Голосовое сообщение с длительностью
-        const duration = data.duration || 0;
-        const durationText = duration < 60 ? `${duration} сек` : `${Math.floor(duration/60)}:${(duration%60).toString().padStart(2, '0')}`;
-        
-        messageDiv.className = 'message voice-message ' + (data.username === username ? 'outgoing' : 'incoming');
-        messageDiv.innerHTML = `
-            <div class="username">${data.username}  <span style="font-size: 0.8em; opacity: 0.7;">${durationText}</span></div>
-            <audio controls src="${data.message}" style="max-width: 200px; height: 30px; margin-top: 5px;"></audio>
-        `;
-    } else {
-        // Обычный текст
-        messageDiv.className = 'message ' + (data.username === username ? 'outgoing' : 'incoming');
-        messageDiv.innerHTML = `
-            <div class="username">${data.username}</div>
-            <div>${data.message}</div>
-        `;
-    }
-    
-    messagesDiv.appendChild(messageDiv);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-});
-                // Если это голосовое сообщение
+            const messageDiv = document.createElement('div');
+            
+            if (data.username === 'Система') {
+                messageDiv.className = 'message system';
+                messageDiv.innerHTML = `<div>${data.message}</div>`;
+            } else if (data.type === 'voice') {
+                const duration = data.duration || 0;
+                const durationText = duration < 60 ? `${duration} сек` : `${Math.floor(duration/60)}:${(duration%60).toString().padStart(2, '0')}`;
+                
                 messageDiv.className = 'message voice-message ' + (data.username === username ? 'outgoing' : 'incoming');
                 messageDiv.innerHTML = `
-                    <div class="username">${data.username} 🎤</div>
-                    <audio controls src="${data.message}"></audio>
+                    <div class="username">${data.username} 🎤 <span style="font-size: 0.8em; opacity: 0.7;">${durationText}</span></div>
+                    <audio controls src="${data.message}" style="max-width: 200px; height: 30px; margin-top: 5px;"></audio>
                 `;
             } else {
-                // Обычный текст
                 messageDiv.className = 'message ' + (data.username === username ? 'outgoing' : 'incoming');
                 messageDiv.innerHTML = `
                     <div class="username">${data.username}</div>
