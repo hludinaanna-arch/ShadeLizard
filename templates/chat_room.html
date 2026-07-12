@@ -137,6 +137,20 @@
             margin-bottom: 3px;
         }
         
+        /* Стили для фото в чате */
+        .message img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            margin-top: 5px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        
+        .message img:hover {
+            transform: scale(1.02);
+        }
+        
         .voice-message audio {
             max-width: 200px;
             height: 30px;
@@ -147,12 +161,12 @@
             display: flex;
             padding: 12px;
             border-top: 1px solid #505081;
-            gap: 10px;
+            gap: 8px;
             flex-shrink: 0;
             align-items: center;
         }
         
-        .input-area input {
+        .input-area input[type="text"] {
             flex: 1;
             padding: 10px;
             border: 1px solid #DFD9D8;
@@ -174,7 +188,8 @@
             font-size: 1.2em;
         }
         
-        #micBtn {
+        /* Кнопки микрофона и фото */
+        .icon-btn {
             background: #505081;
             border-radius: 50%;
             width: 45px;
@@ -183,6 +198,16 @@
             align-items: center;
             justify-content: center;
             padding: 0;
+            font-size: 1.3em;
+            cursor: pointer;
+            border: none;
+            color: #DFD9D8;
+            transition: all 0.3s;
+        }
+        
+        .icon-btn:hover {
+            background: #3d4368;
+            transform: scale(1.05);
         }
         
         #micBtn.recording {
@@ -194,6 +219,39 @@
             0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7); }
             70% { box-shadow: 0 0 0 10px rgba(255, 68, 68, 0); }
             100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); }
+        }
+        
+        /* Предпросмотр фото перед отправкой */
+        .preview-container {
+            position: relative;
+            display: none;
+            padding: 10px;
+            background: #505081;
+            border-top: 1px solid #3d4368;
+        }
+        
+        .preview-container.active {
+            display: block;
+        }
+        
+        .preview-container img {
+            max-width: 200px;
+            max-height: 150px;
+            border-radius: 10px;
+        }
+        
+        .preview-close {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 1.2em;
         }
         
         .username-input {
@@ -216,6 +274,31 @@
             min-width: 0;
         }
         
+        /* Модальное окно для просмотра фото */
+        .image-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .image-modal.active {
+            display: flex;
+        }
+        
+        .image-modal img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+        }
+        
         @media (max-width: 768px) {
             .header { flex-direction: column; gap: 10px; text-align: center; padding: 10px; }
             .header h1 { font-size: 1.2em; }
@@ -232,8 +315,9 @@
             .header h1 { font-size: 1em; }
             .back-btn { padding: 6px 10px; font-size: 0.85em; }
             .input-area { padding: 8px; }
-            .input-area input { padding: 8px; font-size: 14px; }
+            .input-area input[type="text"] { padding: 8px; font-size: 14px; }
             #sendBtn { padding: 8px 15px; font-size: 14px; }
+            .icon-btn { width: 40px; height: 40px; font-size: 1.1em; }
         }
     </style>
 </head>
@@ -251,7 +335,7 @@
     </div>
     
     <div class="share-link">
-        <span>🔗 Ссылка:</span>
+        <span> Ссылка:</span>
         <code id="roomLink">Загрузка...</code>
         <span id="copyStatus">Скопировано!</span>
     </div>
@@ -264,11 +348,24 @@
         
         <div class="messages" id="messages"></div>
         
+        <!-- Предпросмотр фото -->
+        <div class="preview-container" id="previewContainer">
+            <img id="previewImage" src="" alt="Предпросмотр">
+            <button class="preview-close" onclick="closePreview()">✕</button>
+        </div>
+        
         <div class="input-area">
-            <button id="micBtn" title="Голосовое сообщение">🎙️</button>
+            <button id="micBtn" class="icon-btn" title="Голосовое сообщение">🎙️</button>
+            <button id="photoBtn" class="icon-btn" title="Отправить фото">📷</button>
+            <input type="file" id="photoInput" accept="image/*" style="display: none;">
             <input type="text" id="messageInput" placeholder="Напишите сообщение...">
             <button id="sendBtn" onclick="sendMessage()">➤</button>
         </div>
+    </div>
+
+    <!-- Модальное окно для просмотра фото -->
+    <div class="image-modal" id="imageModal" onclick="closeImageModal()">
+        <img id="modalImage" src="" alt="">
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
@@ -286,6 +383,10 @@
         const messageInput = document.getElementById('messageInput');
         const usernameInput = document.getElementById('username');
         const micBtn = document.getElementById('micBtn');
+        const photoBtn = document.getElementById('photoBtn');
+        const photoInput = document.getElementById('photoInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewImage = document.getElementById('previewImage');
         
         const roomLink = window.location.origin + '/chat/' + roomName;
         document.getElementById('roomLink').textContent = roomLink;
@@ -343,7 +444,8 @@
                     recordingStartTime = Date.now();
                     isRecording = true;
                     micBtn.classList.add('recording');
-                    messageInput.placeholder = "Идет запись... Нажмите 🎤 чтобы остановить";
+                    micBtn.textContent = '⏹️';
+                    messageInput.placeholder = "Идет запись... Нажмите чтобы остановить";
                     messageInput.disabled = true;
                     
                 } catch (err) {
@@ -354,10 +456,68 @@
                 mediaRecorder.stop();
                 isRecording = false;
                 micBtn.classList.remove('recording');
+                micBtn.textContent = '🎙️';
                 messageInput.placeholder = "Напишите сообщение...";
                 messageInput.disabled = false;
             }
         });
+        // ----------------------------------
+
+        // --- ОТПРАВКА ФОТО ---
+        photoBtn.addEventListener('click', () => {
+            photoInput.click();
+        });
+        
+        photoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            // Проверка размера (максимум 2 МБ)
+            if (file.size > 2 * 1024 * 1024) {
+                alert('Фото слишком большое! Максимум 2 МБ.');
+                photoInput.value = '';
+                return;
+            }
+            
+            // Проверка типа файла
+            if (!file.type.startsWith('image/')) {
+                alert('Это не изображение!');
+                photoInput.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                previewImage.src = event.target.result;
+                previewContainer.classList.add('active');
+            };
+            reader.readAsDataURL(file);
+        });
+        
+        function closePreview() {
+            previewContainer.classList.remove('active');
+            previewImage.src = '';
+            photoInput.value = '';
+        }
+        
+        function sendPhoto() {
+            const base64Image = previewImage.src;
+            if (!base64Image || base64Image === window.location.href) return;
+            
+            if (!username) {
+                alert('Сначала введите никнейм!');
+                return;
+            }
+            
+            socket.emit('message', {
+                username: username,
+                message: base64Image,
+                room: roomName,
+                type: 'image'
+            });
+            
+            closePreview();
+        }
         // ----------------------------------
 
         function saveRoomToHistory(name, title) {
@@ -420,10 +580,18 @@
                 
                 messageDiv.className = 'message voice-message ' + (data.username === username ? 'outgoing' : 'incoming');
                 messageDiv.innerHTML = `
-                    <div class="username">${data.username} 🎤 <span style="font-size: 0.8em; opacity: 0.7;">${durationText}</span></div>
+                    <div class="username">${data.username} ️ <span style="font-size: 0.8em; opacity: 0.7;">${durationText}</span></div>
                     <audio controls src="${data.message}" style="max-width: 200px; height: 30px; margin-top: 5px;"></audio>
                 `;
+            } else if (data.type === 'image') {
+                // Фото
+                messageDiv.className = 'message ' + (data.username === username ? 'outgoing' : 'incoming');
+                messageDiv.innerHTML = `
+                    <div class="username">${data.username} 📷</div>
+                    <img src="${data.message}" onclick="openImageModal('${data.message}')" alt="Фото">
+                `;
             } else {
+                // Обычный текст
                 messageDiv.className = 'message ' + (data.username === username ? 'outgoing' : 'incoming');
                 messageDiv.innerHTML = `
                     <div class="username">${data.username}</div>
@@ -447,6 +615,16 @@
         messageInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') sendMessage();
         });
+        
+        // Модальное окно для фото
+        function openImageModal(src) {
+            document.getElementById('modalImage').src = src;
+            document.getElementById('imageModal').classList.add('active');
+        }
+        
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.remove('active');
+        }
         
         socket.on('connect', () => document.getElementById('connectionStatus').style.display = 'none');
         socket.on('disconnect', () => document.getElementById('connectionStatus').style.display = 'block');
