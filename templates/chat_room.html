@@ -17,7 +17,7 @@
         .header {
             background: #2f3450;
             color: #DFD9D8;
-            padding: 10px;
+            padding: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -35,23 +35,53 @@
         }
         
         .share-link {
-            padding: 10px;
+            padding: 15px;
             background: #505081;
             text-align: center;
             font-size: 0.9em;
-            cursor: pointer;
-            user-select: none;
-            transition: background 0.3s;
             color: #DFD9D8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
         }
         
         .share-link code {
             background: #f4f3f0;
-            padding: 5px 10px;
+            padding: 8px 15px;
             border-radius: 5px;
-            margin-left: 10px;
             color: #515a8a;
             font-weight: bold;
+            word-break: break-all;
+        }
+        
+        .share-link button {
+            padding: 8px 15px;
+            background: #4E60AE;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .share-link button:hover {
+            background: #3d4d8a;
+        }
+        
+        #copyStatus {
+            color: #4CAF50;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .connection-status {
+            padding: 10px;
+            background: #ff6b6b;
+            color: white;
+            text-align: center;
+            display: none;
         }
         
         .chat-container {
@@ -87,18 +117,15 @@
         .message.incoming {
             background: #505081;
             align-self: flex-start;
-            color: #DFD9D8;
         }
         
         .message.outgoing {
             background: #4E60AE;
-            color: #DFD9D8;
             align-self: flex-end;
         }
         
         .message.system {
-            background:#3d4368d9 ;
-            color: #DFD9D8;
+            background: #3d4368d9;
             align-self: center;
             font-style: italic;
             font-size: 0.9em;
@@ -108,7 +135,6 @@
             font-size: 0.8em;
             opacity: 0.7;
             margin-bottom: 3px;
-            color: #DFD9D8;
         }
         
         .input-area {
@@ -124,6 +150,8 @@
             border: 1px solid #DFD9D8;
             border-radius: 20px;
             outline: none;
+            background: #1f1e34;
+            color: #DFD9D8;
         }
         
         .input-area button {
@@ -138,7 +166,7 @@
         .input-area button:hover { background: #3d4368d9; }
         
         .username-input {
-            padding: 10px;
+            padding: 10px 15px;
             background: #505081;
             text-align: left;
             color: #DFD9D8;
@@ -149,22 +177,17 @@
             border: 1px solid #DFD9D8;
             border-radius: 5px;
             margin-left: 10px;
-        }
-        
-        #copyStatus {
-            margin-left: 10px;
-            color: #2f3450;
-            font-weight: bold;
-            opacity: 0;
-            transition: opacity 0.3s;
+            background: #1f1e34;
+            color: #DFD9D8;
         }
     </style>
 </head>
 <body>
+    <div id="connectionStatus" class="connection-status">
+        ⚠️ Подключение к серверу... Подождите несколько секунд и обновите страницу.
+    </div>
+    
     <div class="header">
-        <div id="connectionStatus" style="padding: 10px; background: #ff6b6b; color: white; text-align: center; display: none;">
-    ️ Подключение к серверу... Подождите несколько секунд и обновите страницу.
-</div>
         <div>
             <h1 id="roomTitle">Комната: {{ room_name }}</h1>
             <div class="room-info">Приватный чат</div>
@@ -172,9 +195,11 @@
         <a href="/" class="back-btn">← На главную</a>
     </div>
     
-    <div class="share-link" onclick="copyLink()" title="Нажмите, чтобы скопировать">
-         Поделитесь ссылкой с другом: <code id="roomLink">/chat</code>
-        <span id="copyStatus"> Скопировано</span>
+    <div class="share-link">
+        <span>🔗 Ссылка на комнату:</span>
+        <code id="roomLink">Загрузка...</code>
+        <button onclick="copyLink()">📋 Копировать</button>
+        <span id="copyStatus">✅ Скопировано!</span>
     </div>
     
     <div class="chat-container">
@@ -193,162 +218,156 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script>
-       const socket = io({
-    reconnection: true,
-    reconnectionDelay: 1000,
-    reconnectionAttempts: 10,
-    timeout: 20000
-});
-
-function saveRoomToHistory(name, title) {
-    let rooms = [];
-    try {
-        rooms = JSON.parse(localStorage.getItem('my_rooms') || '[]');
-    } catch(e) {}
-    
-    // Находим существующую комнату или создаём новую
-    let room = rooms.find(r => r.name === name);
-    
-    if (room) {
-        // Обновляем название, если изменилось
-        room.title = title;
+        // ✅ ВАЖНО: Получаем название комнаты из Flask
+        const roomName = '{{ room_name }}';
         
-        // Добавляем никнейм в список участников (если его там ещё нет)
-        if (username && !room.participants.includes(username)) {
-            room.participants.push(username);
+        // ✅ Получаем элементы страницы
+        const socket = io({
+            reconnection: true,
+            reconnectionDelay: 1000,
+            reconnectionAttempts: 10,
+            timeout: 20000
+        });
+        
+        const messagesDiv = document.getElementById('messages');
+        const messageInput = document.getElementById('messageInput');
+        const usernameInput = document.getElementById('username');
+        
+        // ✅ Генерируем правильную ссылку на комнату
+        const roomLink = window.location.origin + '/chat/' + roomName;
+        document.getElementById('roomLink').textContent = roomLink;
+        
+        // ✅ Функция сохранения комнаты в историю
+        function saveRoomToHistory(name, title) {
+            let rooms = [];
+            try {
+                rooms = JSON.parse(localStorage.getItem('my_rooms') || '[]');
+            } catch(e) {}
+            
+            let room = rooms.find(r => r.name === name);
+            
+            if (room) {
+                room.title = title;
+                if (username && !room.participants.includes(username)) {
+                    room.participants.push(username);
+                }
+            } else {
+                room = {
+                    name: name,
+                    title: title,
+                    participants: username ? [username] : [],
+                    date: new Date().toLocaleString('ru-RU')
+                };
+                rooms.unshift(room);
+            }
+            
+            rooms = rooms.slice(0, 20);
+            localStorage.setItem('my_rooms', JSON.stringify(rooms));
         }
-    } else {
-        // Создаём новую запись
-        room = {
-            name: name,
-            title: title,
-            participants: username ? [username] : [],
-            date: new Date().toLocaleString('ru-RU')
-        };
-        rooms.unshift(room);
-    }
-    
-    // Оставляем только последние 20 комнат
-    rooms = rooms.slice(0, 20);
-    localStorage.setItem('my_rooms', JSON.stringify(rooms));
-}
-
-let username = '';
-
-// ✅ При загрузке страницы — умный фокус
-window.addEventListener('DOMContentLoaded', function() {
-    const savedUsername = localStorage.getItem('chat_username_' + roomName);
-    if (savedUsername) {
-        username = savedUsername;
-        usernameInput.value = savedUsername;
-        socket.emit('join', { username: username, room: roomName, is_reconnect: true });
-        messageInput.focus(); // ← сразу пишем сообщение
-    } else {
-        usernameInput.focus(); // ← сначала вводим ник
-    }
-});
-
-usernameInput.addEventListener('change', function() {
-    username = this.value;
-    if (username) {
-        localStorage.setItem('chat_username_' + roomName, username);
-        socket.emit('join', { username: username, room: roomName, is_reconnect: false });
-        messageInput.focus(); // ← после ввода ника сразу пишем сообщение
-        usernameInput.addEventListener('change', function() {
-    username = this.value;
-    if (username) {
-        localStorage.setItem('chat_username_' + roomName, username);
         
-        // Проверяем, подключен ли сокет
-        if (socket.connected) {
-            socket.emit('join', { username: username, room: roomName, is_reconnect: false });
-        } else {
-            // Ждём подключения
-            socket.on('connect', function() {
-                socket.emit('join', { username: username, room: roomName, is_reconnect: false });
+        let username = '';
+        
+        // ✅ При загрузке страницы — умный фокус
+        window.addEventListener('DOMContentLoaded', function() {
+            const savedUsername = localStorage.getItem('chat_username_' + roomName);
+            if (savedUsername) {
+                username = savedUsername;
+                usernameInput.value = savedUsername;
+                socket.emit('join', { username: username, room: roomName, is_reconnect: true });
+                saveRoomToHistory(roomName, 'Комната ' + roomName);
+                messageInput.focus();
+            } else {
+                usernameInput.focus();
+            }
+        });
+        
+        // ✅ Когда пользователь вводит никнейм
+        usernameInput.addEventListener('change', function() {
+            username = this.value;
+            if (username) {
+                localStorage.setItem('chat_username_' + roomName, username);
+                
+                if (socket.connected) {
+                    socket.emit('join', { username: username, room: roomName, is_reconnect: false });
+                    saveRoomToHistory(roomName, 'Комната ' + roomName);
+                } else {
+                    socket.on('connect', function() {
+                        socket.emit('join', { username: username, room: roomName, is_reconnect: false });
+                        saveRoomToHistory(roomName, 'Комната ' + roomName);
+                    });
+                }
+                
+                messageInput.focus();
+            }
+        });
+        
+        // ✅ Получение сообщений
+        socket.on('message', function(data) {
+            const messageDiv = document.createElement('div');
+            
+            if (data.username === 'Система') {
+                messageDiv.className = 'message system';
+                messageDiv.innerHTML = `<div>${data.message}</div>`;
+            } else {
+                messageDiv.className = 'message ' + (data.username === username ? 'outgoing' : 'incoming');
+                messageDiv.innerHTML = `
+                    <div class="username">${data.username}</div>
+                    <div>${data.message}</div>
+                `;
+            }
+            
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        });
+        
+        // ✅ Отправка сообщения
+        function sendMessage() {
+            const message = messageInput.value;
+            if (message && username) {
+                socket.emit('message', { username: username, message: message, room: roomName });
+                messageInput.value = '';
+                messageInput.focus();
+            }
+        }
+        
+        // ✅ Отправка по Enter
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        // ✅ Копирование ссылки
+        function copyLink() {
+            navigator.clipboard.writeText(roomLink).then(function() {
+                const status = document.getElementById('copyStatus');
+                status.style.opacity = '1';
+                setTimeout(function() {
+                    status.style.opacity = '0';
+                }, 2000);
             });
         }
         
-        messageInput.focus();
-    }
-});
-    }
-});
-
-socket.on('message', function(data) {
-    const messageDiv = document.createElement('div');
-    
-    if (data.username === 'Система') {
-        messageDiv.className = 'message system';
-        messageDiv.innerHTML = `<div>${data.message}</div>`;
-    } else {
-        messageDiv.className = 'message ' + (data.username === username ? 'outgoing' : 'incoming');
-        messageDiv.innerHTML = `
-            <div class="username">${data.username}</div>
-            <div>${data.message}</div>
-        `;
-    }
-    
-    messagesDiv.appendChild(messageDiv);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-});
-
-function sendMessage() {
-    const message = messageInput.value;
-    if (message && username) {
-        socket.emit('message', { username: username, message: message, room: roomName });
-        messageInput.value = '';
-        messageInput.focus(); // ← после отправки фокус остаётся на поле
-    }
-}
-
-messageInput.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        sendMessage();
-    }
-});
-
-function copyLink() {
-    const link = document.getElementById('roomLink').innerText;
-    navigator.clipboard.writeText(link).then(function() {
-        const status = document.getElementById('copyStatus');
-        status.style.opacity = '1';
-        setTimeout(function() {
-            status.style.opacity = '0';
-        }, 2000);
-    }).catch(function() {
-        const textArea = document.createElement('textarea');
-        textArea.value = link;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-        
-        const status = document.getElementById('copyStatus');
-        status.style.opacity = '1';
-        setTimeout(function() {
-            status.style.opacity = '0';
-        }, 2000);
-    });
-}
-
-window.addEventListener('beforeunload', function() {
-    if (username) {
-        socket.emit('leave', { username: username, room: roomName });
-    }
-});
+        // ✅ Индикатор подключения
         socket.on('connect', function() {
-    document.getElementById('connectionStatus').style.display = 'none';
-});
-
-socket.on('disconnect', function() {
-    document.getElementById('connectionStatus').style.display = 'block';
-});
-
-socket.on('connect_error', function(error) {
-    console.log('Ошибка подключения:', error);
-    document.getElementById('connectionStatus').style.display = 'block';
-});
+            document.getElementById('connectionStatus').style.display = 'none';
+        });
+        
+        socket.on('disconnect', function() {
+            document.getElementById('connectionStatus').style.display = 'block';
+        });
+        
+        socket.on('connect_error', function(error) {
+            console.log('Ошибка подключения:', error);
+            document.getElementById('connectionStatus').style.display = 'block';
+        });
+        
+        // ✅ Уведомление о выходе
+        window.addEventListener('beforeunload', function() {
+            if (username) {
+                socket.emit('leave', { username: username, room: roomName });
+            }
+        });
     </script>
 </body>
 </html>
